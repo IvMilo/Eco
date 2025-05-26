@@ -7,8 +7,11 @@ package ecocatch.modelo;
 import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -17,8 +20,18 @@ import java.awt.RenderingHints;
 public class Player {
     private int x;
     private final int y;
-    private final int width = 60, height = 35;
+    private final int width = 150, height = 150;
     private final int panelWidth;
+
+    private static Image playerImg;
+
+    static {
+        try {
+            playerImg = ImageIO.read(Player.class.getResource("/ecocatch/recursos/player.png"));
+        } catch (IOException | IllegalArgumentException e) {
+            playerImg = null;
+        }
+    }
 
     public Player(int startX, int y, int panelWidth) {
         this.x = startX; this.y = y; this.panelWidth = panelWidth;
@@ -32,31 +45,12 @@ public class Player {
     public int getY() { return y; }
 
     public void draw(Graphics2D g2d) {
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // Cuerpo principal
-        g2d.setColor(new Color(180, 220, 235));
-        g2d.fillRoundRect(x + 6, y + 7, width - 12, height - 9, 14, 18);
-
-        // Tapa superior
-        g2d.setColor(new Color(36, 160, 234));
-        g2d.fillRoundRect(x-2, y, width+4, 15, 20, 16);
-
-        // Borde y detalles
-        g2d.setColor(new Color(44, 90, 110));
-        g2d.setStroke(new BasicStroke(2));
-        g2d.drawRoundRect(x + 6, y + 7, width - 12, height - 9, 14, 18);
-
-        // Símbolo reciclaje simple (círculo y flecha)
-        g2d.setColor(new Color(44, 90, 110, 200));
-        g2d.drawArc(x + 24, y + 17, 14, 10, 30, 270);
-        g2d.drawLine(x + 35, y + 18, x + 38, y + 14);
-        g2d.drawLine(x + 34, y + 21, x + 38, y + 14);
-
-        // Asas laterales
-        g2d.setColor(new Color(120, 120, 120));
-        g2d.drawLine(x + 8, y + 16, x + 8, y + height - 4);
-        g2d.drawLine(x + width - 9, y + 16, x + width - 9, y + height - 4);
+        if (playerImg != null) {
+            g2d.drawImage(playerImg, x, y, width, height, null);
+        } else {
+            g2d.setColor(java.awt.Color.RED);
+            g2d.fillRect(x, y, width, height);
+        }
     }
 
     public Rectangle getBounds() {

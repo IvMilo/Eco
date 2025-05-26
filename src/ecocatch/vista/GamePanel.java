@@ -8,7 +8,13 @@ import ecocatch.modelo.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.Random;
+import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.Clip;
+import java.net.URL;
 
 /**
  *
@@ -38,6 +44,30 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private int recogidos = 0;
     private final MultiListaElementos historial = new MultiListaElementos();
 
+    private static Image backgroundImg = null;
+
+    // Clip de sonido
+    private static Clip catchClip = null;
+
+    static {
+        try {
+            backgroundImg = ImageIO.read(GamePanel.class.getResource("/ecocatch/recursos/Background.jpg"));
+        } catch (IOException | IllegalArgumentException e) {
+            backgroundImg = null;
+        }
+        // Cargar sonido
+        try {
+            URL soundURL = GamePanel.class.getResource("/ecocatch/recursos/Sonido cuando atrapas.wav");
+            if (soundURL != null) {
+                AudioInputStream audioIn = AudioSystem.getAudioInputStream(soundURL);
+                catchClip = AudioSystem.getClip();
+                catchClip.open(audioIn);
+            }
+        } catch (Exception e) {
+            catchClip = null;
+        }
+    }
+
     public void notificarFinDeJuego(int score, MultiListaElementos historial) {}
 
     public GamePanel(GameFrame parentFrame) {
@@ -48,7 +78,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
         addKeyListener(this);
 
-        int yJugador = HEIGHT - 120;
+        int yJugador = HEIGHT - 200;
         jugador = new Player(WIDTH / 2 - 30, yJugador, WIDTH);
 
         timer = new Timer(1000 / FPS, this);
@@ -69,9 +99,14 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g.create();
 
-        GradientPaint gp = new GradientPaint(0, 0, new Color(175, 205, 240), 0, HEIGHT, new Color(233, 255, 234));
-        g2.setPaint(gp);
-        g2.fillRect(0, 0, WIDTH, HEIGHT);
+        // Dibujo el background desde recursos, si existe
+        if (backgroundImg != null) {
+            g2.drawImage(backgroundImg, 0, 0, WIDTH, HEIGHT, null);
+        } else {
+            GradientPaint gp = new GradientPaint(0, 0, new Color(175, 205, 240), 0, HEIGHT, new Color(233, 255, 234));
+            g2.setPaint(gp);
+            g2.fillRect(0, 0, WIDTH, HEIGHT);
+        }
 
         g2.setColor(new Color(80, 80, 80, 60));
         g2.fillOval(jugador.getX() + 10, jugador.getY() + 34, 40, 15);
@@ -123,6 +158,15 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    // Método para reproducir el sonido
+    private void playCatchSound() {
+        if (catchClip != null) {
+            if (catchClip.isRunning()) catchClip.stop();
+            catchClip.setFramePosition(0);
+            catchClip.start();
+        }
+    }
+
     private void detectarColisiones() {
         NodoElemento temp = elementos.getCabeza();
         NodoElemento prev = null;
@@ -134,6 +178,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                 continue;
             }
             if (fe.getBounds().intersects(jugador.getBounds())) {
+                playCatchSound(); // Reproduce el sonido al capturar
                 score += fe.getPuntos();
                 historial.agregar(fe);
                 recogidos++;
