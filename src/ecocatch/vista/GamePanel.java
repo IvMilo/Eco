@@ -5,134 +5,105 @@
 package ecocatch.vista;
 
 import ecocatch.modelo.*;
-import javax.swing.JPanel;
-import javax.swing.Timer;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyListener;
-import java.awt.event.KeyEvent;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.Random;
-import javax.swing.JFrame;
 
 /**
  *
  * @author Milo
  */
 
-public class GamePanel extends JPanel
-                       implements ActionListener, KeyListener {
-
-    // --- constantes del juego ---
-    private final int WIDTH  = 600;
-    private final int HEIGHT = 800;
-    private final int FPS    = 60;
-    private final int PLAYER_SPEED = 8;
-
-    // --- modelo ---
+public class GamePanel extends JPanel implements ActionListener, KeyListener {
+    private final int WIDTH = 900, HEIGHT = 700, FPS = 60, PLAYER_SPEED = 20;
     private final Player jugador;
     private final ListaElementos elementos = new ListaElementos();
     private int score = 0;
-
     private final Random rand = new Random();
     private final Timer timer;
     private final int MAX_RECOGIDOS = 20;
     private int recogidos = 0;
+    private final MultiListaElementos historial = new MultiListaElementos();
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(Color.white);
+        setBackground(new Color(240, 255, 252));
         setFocusable(true);
         addKeyListener(this);
 
-        int yJugador = HEIGHT - 80;
+        int yJugador = HEIGHT - 120;
         jugador = new Player(WIDTH / 2 - 30, yJugador, WIDTH);
 
         timer = new Timer(1000 / FPS, this);
         timer.start();
+        SwingUtilities.invokeLater(this::requestFocusInWindow);
     }
 
-    private void terminarJuego() {
-        timer.stop();
-
-        ReportePartida reporte = new ReportePartida(score, historial);
-        reporte.guardarHistorialTXT();
-        reporte.exportarCSV();
-        reporte.generarLogros();
-
-        JFrame topFrame = (JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
-        topFrame.getContentPane().removeAll();
-        topFrame.add(new ResultadoPanel(score, historial));
-        topFrame.revalidate();
-        topFrame.repaint();
-    }
-  
-    
-    /* ---------------- lógica principal cada tick ---------------- */
     @Override
     public void actionPerformed(java.awt.event.ActionEvent e) {
         generarElementoAleatorio();
         actualizarElementos();
         detectarColisiones();
-        repaint();                              // dispara paintComponent
+        repaint();
     }
 
-    /* ---------------- pintura de pantalla ---------------- */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
+        Graphics2D g2 = (Graphics2D) g.create();
 
-        // dibujar jugador
-        jugador.draw(g2d);
+        // Fondo degradado profesional
+        GradientPaint gp = new GradientPaint(0, 0, new Color(175, 205, 240), 0, HEIGHT, new Color(233, 255, 234));
+        g2.setPaint(gp);
+        g2.fillRect(0, 0, WIDTH, HEIGHT);
 
-        // dibujar elementos
+        // Sombra bajo la caneca
+        g2.setColor(new Color(80, 80, 80, 60));
+        g2.fillOval(jugador.getX() + 10, jugador.getY() + 34, 40, 15);
+
+        // Dibuja jugador
+        jugador.draw(g2);
+
+        // Dibuja elementos
         NodoElemento temp = elementos.getCabeza();
         while (temp != null) {
-            temp.elemento.draw(g2d);
+            temp.elemento.draw(g2);
             temp = temp.siguiente;
         }
 
-        // dibujar puntuación
-        g2d.setColor(Color.black);
-        g2d.setFont(new Font("SansSerif", Font.BOLD, 22));
-        g2d.drawString("Puntos: " + score, WIDTH - 150, 30);
+        // Panel HUD translúcido
+        g2.setColor(new Color(255, 255, 255, 160));
+        g2.fillRoundRect(WIDTH - 190, 15, 170, 50, 18, 18);
+        g2.setColor(new Color(44, 90, 110));
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        g2.drawString("Puntos: " + score, WIDTH - 170, 50);
+
+        g2.dispose();
     }
 
-    /* ------------------------------------------------------------ */
-    /* ------------------ generación de elementos ----------------- */
     private void generarElementoAleatorio() {
-        // probabilidad ~ 3% por frame → ~1.8 elementos/seg
         if (rand.nextInt(100) > 97) {
             String[] tipos = {"Orgánico", "Inorgánico", "Tóxico"};
             int idx = rand.nextInt(tipos.length);
             String tipo = tipos[idx];
-
             int puntos = switch (tipo) {
                 case "Orgánico"   -> 1;
                 case "Inorgánico" -> 3;
-                default /* Tóxico */ -> 5;
+                default -> 5;
             };
-
             String nombre = switch (tipo) {
                 case "Orgánico"   -> "Hoja";
                 case "Inorgánico" -> "Plástico";
                 default           -> "Batería";
             };
-
             int x = rand.nextInt(WIDTH - 32);
-            int speed = 2 + rand.nextInt(4);   // 2-5 px por frame
+            int speed = 2 + rand.nextInt(4); // 2-5 px por frame
             FallingElement fe = new FallingElement(nombre, tipo, puntos, x, -32, speed);
             elementos.agregar(fe);
         }
     }
-    
-    private final MultiListaElementos historial = new MultiListaElementos();
 
-    /* -------------------- actualización -------------------- */
     private void actualizarElementos() {
         NodoElemento temp = elementos.getCabeza();
         while (temp != null) {
@@ -141,46 +112,51 @@ public class GamePanel extends JPanel
         }
     }
 
-    /* --------------------- colisiones ---------------------- */
     private void detectarColisiones() {
-        
         NodoElemento temp   = elementos.getCabeza();
-        NodoElemento prev   = null;   // nodo anterior, para eliminar
+        NodoElemento prev   = null;
         while (temp != null) {
             FallingElement fe = temp.elemento;
-            // 1. ¿fuera de pantalla?
             if (fe.fueraDePantalla(HEIGHT)) {
                 elementos.eliminar(temp, prev);
                 temp = (prev == null) ? elementos.getCabeza() : prev.siguiente;
                 continue;
             }
-
-            // 2. ¿colisión con jugador?
             if (fe.getBounds().intersects(jugador.getBounds())) {
                 score += fe.getPuntos();
                 historial.agregar(fe);
                 recogidos++;
                 elementos.eliminar(temp, prev);
                 if (recogidos >= MAX_RECOGIDOS) {
-                        terminarJuego();
-                        return;
-                    }
+                    terminarJuego();
+                    return;
+                }
             }
-
-            // avanzar punteros
             prev = temp;
             temp = temp.siguiente;
         }
     }
-    
-    /* ---------------------- teclado ------------------------ */
+
+    private void terminarJuego() {
+        timer.stop();
+        ReportePartida reporte = new ReportePartida(score, historial);
+        reporte.guardarHistorialTXT();
+        reporte.exportarCSV();
+        reporte.generarLogros();
+        JFrame topFrame = (JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
+        topFrame.getContentPane().removeAll();
+        topFrame.add(new ResultadoPanel(score, historial));
+        topFrame.revalidate();
+        topFrame.repaint();
+    }
+
     @Override public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_LEFT)
             jugador.move(-PLAYER_SPEED);
         else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
             jugador.move(PLAYER_SPEED);
     }
-    @Override public void keyReleased(KeyEvent e) { }
-    @Override public void keyTyped(KeyEvent e)    { }
+    @Override public void keyReleased(KeyEvent e) {}
+    @Override public void keyTyped(KeyEvent e) {}
 }
 

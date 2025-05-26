@@ -16,40 +16,60 @@ public class MenuPanel extends JPanel {
     public JButton btnJugar, btnInstrucciones, btnEstadisticas, btnSalir;
 
     public MenuPanel() {
-        setLayout(new GridBagLayout());
-        setBackground(new Color(180, 230, 255));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20, 10, 20, 10);
+        setLayout(new BorderLayout());
+        setBackground(new Color(232, 255, 245));
 
-        JLabel lblTitulo = new JLabel("🌱 EcoCatch 🌱");
-        lblTitulo.setFont(new Font("Comic Sans MS", Font.BOLD, 48));
-        lblTitulo.setForeground(new Color(34, 139, 34));
-        gbc.gridx = 0; gbc.gridy = 0;
-        add(lblTitulo, gbc);
+        // Título grande con sombra
+        JLabel lblTitulo = new JLabel("EcoCatch");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 56));
+        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTitulo.setForeground(new Color(34, 120, 74));
+        lblTitulo.setBorder(BorderFactory.createEmptyBorder(40, 0, 20, 0));
+        add(lblTitulo, BorderLayout.NORTH);
 
-        btnJugar = crearBoton("Jugar");
-        gbc.gridy = 1;
-        add(btnJugar, gbc);
+        // Panel central con los botones
+        JPanel panelCentro = new JPanel();
+        panelCentro.setOpaque(false);
+        panelCentro.setLayout(new GridLayout(4, 1, 0, 32));
 
-        btnInstrucciones = crearBoton("Instrucciones");
-        gbc.gridy = 2;
-        add(btnInstrucciones, gbc);
+        btnJugar = createMenuButton("JUGAR");
+        btnInstrucciones = createMenuButton("INSTRUCCIONES");
+        btnEstadisticas = createMenuButton("ESTADÍSTICAS");
+        btnSalir = createMenuButton("SALIR");
 
-        btnEstadisticas = crearBoton("Estadísticas");
-        gbc.gridy = 3;
-        add(btnEstadisticas, gbc);
+        panelCentro.add(btnJugar);
+        panelCentro.add(btnInstrucciones);
+        panelCentro.add(btnEstadisticas);
+        panelCentro.add(btnSalir);
 
-        btnSalir = crearBoton("Salir");
-        gbc.gridy = 4;
-        add(btnSalir, gbc);
+        JPanel panelContenedor = new JPanel(new GridBagLayout());
+        panelContenedor.setOpaque(false);
+        panelContenedor.add(panelCentro);
+
+        add(panelContenedor, BorderLayout.CENTER);
+
+        // Pie de página
+        JLabel lblPie = new JLabel("Hecho con ♻️ por Milo");
+        lblPie.setFont(new Font("Segoe UI", Font.ITALIC, 18));
+        lblPie.setHorizontalAlignment(SwingConstants.CENTER);
+        lblPie.setForeground(new Color(59, 97, 77));
+        lblPie.setBorder(BorderFactory.createEmptyBorder(0,0,18,0));
+        add(lblPie, BorderLayout.SOUTH);
     }
 
-    private JButton crearBoton(String texto) {
-        JButton btn = new JButton(texto);
-        btn.setFont(new Font("Comic Sans MS", Font.BOLD, 28));
-        btn.setBackground(new Color(255, 255, 200));
+    private JButton createMenuButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        btn.setBackground(new Color(44, 181, 130));
+        btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setPreferredSize(new Dimension(300, 60));
+        btn.setBorder(BorderFactory.createEmptyBorder(12, 60, 12, 60));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setOpaque(true);
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) { btn.setBackground(new Color(36, 160, 234)); }
+            public void mouseExited(java.awt.event.MouseEvent evt) { btn.setBackground(new Color(44, 181, 130)); }
+        });
         return btn;
     }
 

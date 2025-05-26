@@ -18,46 +18,55 @@ public class InstruccionesPanel extends JPanel {
 
     public InstruccionesPanel() {
         setLayout(new BorderLayout());
-        setBackground(new Color(225, 255, 225));
+        setBackground(new Color(232, 255, 245));
 
         JLabel lblTitulo = new JLabel("¿Cómo jugar EcoCatch?");
-        lblTitulo.setFont(new Font("Comic Sans MS", Font.BOLD, 36));
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 38));
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitulo.setForeground(new Color(0, 102, 51));
+        lblTitulo.setForeground(new Color(34, 120, 74));
+        lblTitulo.setBorder(BorderFactory.createEmptyBorder(24, 0, 20, 0));
         add(lblTitulo, BorderLayout.NORTH);
 
+        JPanel panelCentro = new JPanel();
+        panelCentro.setOpaque(false);
+        panelCentro.setLayout(new BoxLayout(panelCentro, BoxLayout.Y_AXIS));
+
+        JLabel iconos = new JLabel("🌿  🧴  🔋");
+        iconos.setFont(new Font("Segoe UI", Font.PLAIN, 48));
+        iconos.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JTextArea txtInstrucciones = new JTextArea();
-        txtInstrucciones.setFont(new Font("Comic Sans MS", Font.PLAIN, 22));
+        txtInstrucciones.setFont(new Font("Segoe UI", Font.PLAIN, 22));
         txtInstrucciones.setLineWrap(true);
         txtInstrucciones.setWrapStyleWord(true);
         txtInstrucciones.setEditable(false);
         txtInstrucciones.setOpaque(false);
-        txtInstrucciones.setForeground(Color.BLACK);
+        txtInstrucciones.setForeground(new Color(24, 75, 50));
         txtInstrucciones.setText("""
                                  \u00a1Ayuda a limpiar el planeta atrapando los objetos contaminantes con la caneca recicladora!
                                  
                                  \u2022 Usa las teclas \u2190 (izquierda) y \u2192 (derecha) para mover la caneca.
-                                 \u2022 Atrapa hojas, pl\u00e1sticos y bater\u00edas que caen del cielo.
-                                 \u2022 Cada objeto tiene un color:
-                                    - \ud83d\udfe2 Hoja (org\u00e1nico)   - \ud83d\udd35 Pl\u00e1stico (inorg\u00e1nico)   - \ud83d\udfe3 Bater\u00eda (t\u00f3xico)
+                                 \u2022 Atrapa hojas (\ud83c\udf3f), pl\u00e1sticos (\ud83e\uddf4) y bater\u00edas (\ud83d\udd0b) que caen del cielo.
                                  \u2022 Gana puntos por cada objeto atrapado.
                                  \u2022 \u00a1Evita dejar caer los objetos!
                                  
                                  \u00a1Supera tu puntaje y desbloquea logros!""");
-        txtInstrucciones.setPreferredSize(new Dimension(650, 400));
-        JScrollPane scroll = new JScrollPane(txtInstrucciones);
-        scroll.setBorder(null);
-        scroll.setOpaque(false);
-        scroll.getViewport().setOpaque(false);
+        txtInstrucciones.setBorder(BorderFactory.createEmptyBorder(18, 26, 18, 26));
 
-        JPanel panelCentro = new JPanel(new GridBagLayout());
-        panelCentro.setOpaque(false);
-        panelCentro.add(scroll);
+        panelCentro.add(iconos);
+        panelCentro.add(Box.createVerticalStrut(12));
+        panelCentro.add(txtInstrucciones);
+
         add(panelCentro, BorderLayout.CENTER);
 
         btnVolver = new JButton("Volver al Menú");
-        btnVolver.setFont(new Font("Comic Sans MS", Font.BOLD, 24));
-        btnVolver.setBackground(new Color(200, 230, 255));
+        btnVolver.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        btnVolver.setBackground(new Color(44, 181, 130));
+        btnVolver.setForeground(Color.WHITE);
+        btnVolver.setFocusPainted(false);
+        btnVolver.setBorder(BorderFactory.createEmptyBorder(10, 36, 10, 36));
+        btnVolver.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         JPanel panelSur = new JPanel();
         panelSur.setOpaque(false);
         panelSur.add(btnVolver);
