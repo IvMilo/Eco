@@ -110,3 +110,45 @@ Resumen por tipo:
 - Inorgánico: 2
 - Tóxico: 1
 
+===== PARTIDA: 2025-05-26 05:36:53 =====
+Puntaje total: 13 pts
+Resumen por tipo:
+- Orgánico: 2
+- Inorgánico: 2
+- Tóxico: 1
+
+===== PARTIDA: 2025-05-26 05:42:05 =====
+Puntaje total: 19 pts
+Resumen por tipo:
+- Orgánico: 1
+- Inorgánico: 1
+- Tóxico: 3
+
+===== PARTIDA: 2025-05-26 05:43:04 =====
+Puntaje total: 21 pts
+Resumen por tipo:
+- Orgánico: 0
+- Inorgánico: 2
+- Tóxico: 3
+
+===== PARTIDA: 2025-05-26 05:52:25 =====
+Puntaje total: 13 pts
+Resumen por tipo:
+- Orgánico: 2
+- Inorgánico: 2
+- Tóxico: 1
+
+===== PARTIDA: 2025-05-26 05:53:07 =====
+Puntaje total: 15 pts
+Resumen por tipo:
+- Orgánico: 1
+- Inorgánico: 3
+- Tóxico: 1
+
+===== PARTIDA: 2025-05-26 05:53:36 =====
+Puntaje total: 13 pts
+Resumen por tipo:
+- Orgánico: 2
+- Inorgánico: 2
+- Tóxico: 1
+

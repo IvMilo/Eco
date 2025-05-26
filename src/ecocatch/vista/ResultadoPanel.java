@@ -18,13 +18,20 @@ import java.util.Map;
  * @author Milo
  */
 
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
+/**
+ *
+ * @author Milo
+ */
+
 public class ResultadoPanel extends JPanel {
-    public final JButton btnMenu;
-    public final JButton btnReintentar;
-    public final JButton btnEstadisticas;
     public final JButton btnSalir;
 
-    public ResultadoPanel(int puntaje, MultiListaElementos historial, GameFrame frame) {
+    public ResultadoPanel(int puntaje, MultiListaElementos historial, JFrame parent) {
         setLayout(new BorderLayout(0, 10));
         setBackground(new Color(232, 255, 245));
 
@@ -69,20 +76,8 @@ public class ResultadoPanel extends JPanel {
         JPanel sur = new JPanel(new FlowLayout(FlowLayout.CENTER, 24, 18));
         sur.setOpaque(false);
 
-        btnMenu = crearBoton("Menú Principal", new Color(44, 181, 130));
-        btnReintentar = crearBoton("Jugar de Nuevo", new Color(36, 160, 234));
-        btnEstadisticas = crearBoton("Ver Estadísticas", new Color(120, 160, 90));
         btnSalir = crearBoton("Salir", new Color(200, 60, 90));
-
-        // Los listeners llaman directamente a métodos de GameFrame
-        btnMenu.addActionListener(e -> frame.mostrarMenu());
-        btnReintentar.addActionListener(e -> frame.mostrarJuego());
-        btnEstadisticas.addActionListener(e -> frame.mostrarEstadisticas());
         btnSalir.addActionListener(e -> System.exit(0));
-
-        sur.add(btnMenu);
-        sur.add(btnReintentar);
-        sur.add(btnEstadisticas);
         sur.add(btnSalir);
 
         add(sur, BorderLayout.SOUTH);

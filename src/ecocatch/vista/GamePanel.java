@@ -27,7 +27,7 @@ import java.util.Random;
  */
 
 public class GamePanel extends JPanel implements ActionListener, KeyListener {
-    private final GameFrame parentFrame; // Referencia al frame principal
+    private final GameFrame parentFrame;
     private final int WIDTH = 900, HEIGHT = 700, FPS = 60, PLAYER_SPEED = 20;
     private final Player jugador;
     private final ListaElementos elementos = new ListaElementos();
@@ -38,9 +38,11 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private int recogidos = 0;
     private final MultiListaElementos historial = new MultiListaElementos();
 
-    // Constructor: recibe el frame principal para poder mostrar el ResultadoPanel
+    public void notificarFinDeJuego(int score, MultiListaElementos historial) {}
+
     public GamePanel(GameFrame parentFrame) {
         this.parentFrame = parentFrame;
+
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(new Color(240, 255, 252));
         setFocusable(true);
@@ -67,12 +69,10 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g.create();
 
-        // Fondo degradado
         GradientPaint gp = new GradientPaint(0, 0, new Color(175, 205, 240), 0, HEIGHT, new Color(233, 255, 234));
         g2.setPaint(gp);
         g2.fillRect(0, 0, WIDTH, HEIGHT);
 
-        // Sombra bajo la caneca
         g2.setColor(new Color(80, 80, 80, 60));
         g2.fillOval(jugador.getX() + 10, jugador.getY() + 34, 40, 15);
 
@@ -84,7 +84,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             temp = temp.siguiente;
         }
 
-        // Panel de puntaje
         g2.setColor(new Color(255, 255, 255, 160));
         g2.fillRoundRect(WIDTH - 190, 15, 170, 50, 18, 18);
         g2.setColor(new Color(44, 90, 110));
@@ -149,7 +148,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    // Detiene el juego y muestra el ResultadoPanel usando el frame principal
     private void terminarJuego() {
         timer.stop();
         ReportePartida reporte = new ReportePartida(score, historial);
@@ -157,10 +155,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         reporte.exportarCSV();
         reporte.generarLogros();
 
-        parentFrame.getContentPane().removeAll();
-        parentFrame.add(new ResultadoPanel(score, historial, parentFrame));
-        parentFrame.revalidate();
-        parentFrame.repaint();
+        notificarFinDeJuego(score, historial);
     }
 
     @Override
@@ -170,10 +165,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
             jugador.move(PLAYER_SPEED);
     }
-
     @Override public void keyReleased(KeyEvent e) {}
     @Override public void keyTyped(KeyEvent e) {}
 }
-
-
-
