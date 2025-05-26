@@ -4,11 +4,15 @@
  */
 package ecocatch.modelo;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+
 /**
  *
  * @author Milo
  */
-public class MultiListaElementos {
+public class MultiListaElementos implements Iterable<FallingElement> {
     private NodoTipo raiz;
 
     public MultiListaElementos() {
@@ -67,5 +71,38 @@ public class MultiListaElementos {
             actual = actual.getSiguiente();
         }
         return 0;
+    }
+
+    // --- NUEVO: Implementación de Iterable<FallingElement> ---
+    @Override
+    public Iterator<FallingElement> iterator() {
+        return new Iterator<FallingElement>() {
+            private NodoTipo tipoActual = raiz;
+            private NodoElemento elemActual = (raiz != null) ? raiz.getCabeza() : null;
+
+            private void avanzarSiNecesario() {
+                while (tipoActual != null && elemActual == null) {
+                    tipoActual = tipoActual.getSiguiente();
+                    elemActual = (tipoActual != null) ? tipoActual.getCabeza() : null;
+                }
+            }
+
+            @Override
+            public boolean hasNext() {
+                avanzarSiNecesario();
+                return elemActual != null;
+            }
+
+            @Override
+            public FallingElement next() {
+                avanzarSiNecesario();
+                if (elemActual == null) {
+                    throw new NoSuchElementException();
+                }
+                FallingElement value = elemActual.elemento;
+                elemActual = elemActual.siguiente;
+                return value;
+            }
+        };
     }
 }

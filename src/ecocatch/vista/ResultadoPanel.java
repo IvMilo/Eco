@@ -5,10 +5,13 @@
 package ecocatch.vista;
 
 
+import ecocatch.modelo.FallingElement;
+import ecocatch.modelo.MultiListaElementos;
+
 import javax.swing.*;
 import java.awt.*;
-import ecocatch.modelo.MultiListaElementos;
-import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -16,125 +19,125 @@ import java.awt.event.ActionListener;
  */
 
 public class ResultadoPanel extends JPanel {
-    public static final String CMD_MENU = "MENU";
-    public static final String CMD_REINTENTAR = "REINTENTAR";
-    public static final String CMD_ESTADISTICAS = "ESTADISTICAS";
-    public static final String CMD_SALIR = "SALIR";
-
     public final JButton btnMenu;
     public final JButton btnReintentar;
     public final JButton btnEstadisticas;
     public final JButton btnSalir;
 
-    public ResultadoPanel(int puntaje, MultiListaElementos historial) {
-        setLayout(new BorderLayout());
+    public ResultadoPanel(int puntaje, MultiListaElementos historial, GameFrame frame) {
+        setLayout(new BorderLayout(0, 10));
         setBackground(new Color(232, 255, 245));
 
-        // Título grande
-        JLabel lblTitulo = new JLabel("¡Juego Terminado!");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 46));
+        JLabel lblTitulo = new JLabel("¡Juego Terminado!", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 36));
         lblTitulo.setForeground(new Color(36, 160, 90));
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitulo.setBorder(BorderFactory.createEmptyBorder(32, 0, 12, 0));
+        lblTitulo.setBorder(BorderFactory.createEmptyBorder(32, 0, 8, 0));
         add(lblTitulo, BorderLayout.NORTH);
 
-        // Panel central con puntaje y logros
-        JPanel panelCentro = new JPanel();
-        panelCentro.setOpaque(false);
-        panelCentro.setLayout(new BoxLayout(panelCentro, BoxLayout.Y_AXIS));
-
-        // Puntaje destacado
-        JLabel lblPuntaje = new JLabel("Tu puntaje: " + puntaje);
-        lblPuntaje.setFont(new Font("Segoe UI", Font.BOLD, 36));
-        lblPuntaje.setForeground(new Color(44, 90, 110));
+        JPanel centro = new JPanel();
+        centro.setOpaque(false);
+        centro.setLayout(new BoxLayout(centro, BoxLayout.Y_AXIS));
+        JLabel lblPuntaje = new JLabel("Tu puntaje: " + puntaje, SwingConstants.CENTER);
+        lblPuntaje.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        lblPuntaje.setForeground(new Color(34, 85, 119));
         lblPuntaje.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panelCentro.add(lblPuntaje);
+        centro.add(lblPuntaje);
+        centro.add(Box.createVerticalStrut(12));
 
-        panelCentro.add(Box.createVerticalStrut(18));
-
-        // Logros (demo)
-        JLabel lblLogros = new JLabel("🏅 Logros desbloqueados:");
-        lblLogros.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        lblLogros.setForeground(new Color(34, 120, 74));
-        lblLogros.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panelCentro.add(lblLogros);
-
-        // Aquí puedes generar dinámicamente los logros según historial
-        JTextArea areaLogros = new JTextArea();
-        areaLogros.setText(
-               "- ¡Sigue mejorando!"
-        );
-        areaLogros.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+        JTextArea areaLogros = new JTextArea(calcularLogros(puntaje, historial));
+        areaLogros.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        areaLogros.setForeground(new Color(44, 115, 54));
         areaLogros.setOpaque(false);
         areaLogros.setEditable(false);
         areaLogros.setAlignmentX(Component.CENTER_ALIGNMENT);
-        areaLogros.setBorder(BorderFactory.createEmptyBorder(6, 32, 6, 32));
-        panelCentro.add(areaLogros);
+        areaLogros.setBorder(BorderFactory.createTitledBorder("Logros desbloqueados"));
+        centro.add(areaLogros);
+        centro.add(Box.createVerticalStrut(8));
 
-        panelCentro.add(Box.createVerticalStrut(18));
-
-        // Tabla resumen (puedes personalizarla)
-        String[] cols = {"Tipo", "Cantidad"};
-        String[][] data = {{"Orgánico", "7"}, {"Inorgánico", "8"}, {"Tóxico", "5"}};
-        JTable tabla = new JTable(data, cols);
-        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        tabla.setRowHeight(28);
-        tabla.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
+        JTable tabla = new JTable(resumenPorTipo(historial), new String[] {"Tipo", "Cantidad"});
         tabla.setEnabled(false);
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        tabla.setRowHeight(26);
+        tabla.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
         JScrollPane scrollTabla = new JScrollPane(tabla);
-        scrollTabla.setPreferredSize(new Dimension(300, 110));
-        scrollTabla.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 40));
-        panelCentro.add(scrollTabla);
+        scrollTabla.setPreferredSize(new Dimension(340, 90));
+        scrollTabla.setBorder(BorderFactory.createTitledBorder("Resumen de objetos recogidos"));
+        centro.add(scrollTabla);
 
-        add(panelCentro, BorderLayout.CENTER);
+        add(centro, BorderLayout.CENTER);
 
-        // Botones estilizados y funcionales
-        JPanel panelSur = new JPanel();
-        panelSur.setOpaque(false);
-        panelSur.setLayout(new FlowLayout(FlowLayout.CENTER, 28, 24));
+        JPanel sur = new JPanel(new FlowLayout(FlowLayout.CENTER, 24, 18));
+        sur.setOpaque(false);
 
-        btnMenu = createButton("Menú Principal", new Color(44, 181, 130), CMD_MENU);
-        btnReintentar = createButton("Jugar de Nuevo", new Color(36, 160, 234), CMD_REINTENTAR);
-        btnEstadisticas = createButton("Ver Estadísticas", new Color(120, 160, 90), CMD_ESTADISTICAS);
-        btnSalir = createButton("Salir", new Color(200, 60, 90), CMD_SALIR);
+        btnMenu = crearBoton("Menú Principal", new Color(44, 181, 130));
+        btnReintentar = crearBoton("Jugar de Nuevo", new Color(36, 160, 234));
+        btnEstadisticas = crearBoton("Ver Estadísticas", new Color(120, 160, 90));
+        btnSalir = crearBoton("Salir", new Color(200, 60, 90));
 
-        panelSur.add(btnMenu);
-        panelSur.add(btnReintentar);
-        panelSur.add(btnEstadisticas);
-        panelSur.add(btnSalir);
+        // Los listeners llaman directamente a métodos de GameFrame
+        btnMenu.addActionListener(e -> frame.mostrarMenu());
+        btnReintentar.addActionListener(e -> frame.mostrarJuego());
+        btnEstadisticas.addActionListener(e -> frame.mostrarEstadisticas());
+        btnSalir.addActionListener(e -> System.exit(0));
 
-        add(panelSur, BorderLayout.SOUTH);
+        sur.add(btnMenu);
+        sur.add(btnReintentar);
+        sur.add(btnEstadisticas);
+        sur.add(btnSalir);
+
+        add(sur, BorderLayout.SOUTH);
     }
 
-    private JButton createButton(String text, Color bg, String actionCommand) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        btn.setBackground(bg);
+    private JButton crearBoton(String texto, Color color) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        btn.setBackground(color);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder(10, 34, 10, 34));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setOpaque(true);
-        btn.setActionCommand(actionCommand);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 22, 8, 22));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btn.setBackground(bg.darker());
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btn.setBackground(bg);
-            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) { btn.setBackground(color.darker()); }
+            public void mouseExited(java.awt.event.MouseEvent evt) { btn.setBackground(color); }
         });
         return btn;
     }
 
-    /**
-     * Registra un único ActionListener para todos los botones.
-     * Usa getActionCommand() en el listener para distinguir la acción.
-     */
-    public void setControladores(ActionListener listener) {
-        btnMenu.addActionListener(listener);
-        btnReintentar.addActionListener(listener);
-        btnEstadisticas.addActionListener(listener);
-        btnSalir.addActionListener(listener);
+    private String calcularLogros(int puntaje, MultiListaElementos historial) {
+        int total = 0, organicos = 0, inorganicos = 0, toxicos = 0;
+        if (historial != null) {
+            for (FallingElement el : historial) {
+                total++;
+                String tipo = el.getTipo();
+                if ("Orgánico".equalsIgnoreCase(tipo)) organicos++;
+                else if ("Inorgánico".equalsIgnoreCase(tipo)) inorganicos++;
+                else if ("Tóxico".equalsIgnoreCase(tipo)) toxicos++;
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        if (total >= 20) sb.append("• ¡Recolector Master! (20+ objetos)\n");
+        if (organicos >= 10) sb.append("• Guardián Verde (10+ orgánicos)\n");
+        if (toxicos >= 5) sb.append("• Manejo Tóxico (5+ tóxicos)\n");
+        if (puntaje >= 50) sb.append("• ¡Puntaje épico! (50+ puntos)\n");
+        if (sb.length() == 0) sb.append("Aún sin logros especiales. ¡Sigue intentando!");
+        return sb.toString();
+    }
+
+    private String[][] resumenPorTipo(MultiListaElementos historial) {
+        Map<String, Integer> mapa = new HashMap<>();
+        if (historial != null) {
+            for (FallingElement el : historial) {
+                String tipo = el.getTipo();
+                mapa.put(tipo, mapa.getOrDefault(tipo, 0) + 1);
+            }
+        }
+        String[] tipos = {"Orgánico", "Inorgánico", "Tóxico"};
+        String[][] data = new String[tipos.length][2];
+        for (int i = 0; i < tipos.length; i++) {
+            data[i][0] = tipos[i];
+            data[i][1] = String.valueOf(mapa.getOrDefault(tipos[i], 0));
+        }
+        return data;
     }
 }

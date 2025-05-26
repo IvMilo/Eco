@@ -15,18 +15,32 @@ import java.util.Random;
  * @author Milo
  */
 
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+
+
+/**
+ *
+ * @author Milo
+ */
+
 public class GamePanel extends JPanel implements ActionListener, KeyListener {
+    private final GameFrame parentFrame; // Referencia al frame principal
     private final int WIDTH = 900, HEIGHT = 700, FPS = 60, PLAYER_SPEED = 20;
     private final Player jugador;
     private final ListaElementos elementos = new ListaElementos();
     private int score = 0;
     private final Random rand = new Random();
     private final Timer timer;
-    private final int MAX_RECOGIDOS = 20;
+    private final int MAX_RECOGIDOS = 5;
     private int recogidos = 0;
     private final MultiListaElementos historial = new MultiListaElementos();
 
-    public GamePanel() {
+    // Constructor: recibe el frame principal para poder mostrar el ResultadoPanel
+    public GamePanel(GameFrame parentFrame) {
+        this.parentFrame = parentFrame;
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(new Color(240, 255, 252));
         setFocusable(true);
@@ -53,7 +67,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g.create();
 
-        // Fondo degradado profesional
+        // Fondo degradado
         GradientPaint gp = new GradientPaint(0, 0, new Color(175, 205, 240), 0, HEIGHT, new Color(233, 255, 234));
         g2.setPaint(gp);
         g2.fillRect(0, 0, WIDTH, HEIGHT);
@@ -62,17 +76,15 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         g2.setColor(new Color(80, 80, 80, 60));
         g2.fillOval(jugador.getX() + 10, jugador.getY() + 34, 40, 15);
 
-        // Dibuja jugador
         jugador.draw(g2);
 
-        // Dibuja elementos
         NodoElemento temp = elementos.getCabeza();
         while (temp != null) {
             temp.elemento.draw(g2);
             temp = temp.siguiente;
         }
 
-        // Panel HUD translúcido
+        // Panel de puntaje
         g2.setColor(new Color(255, 255, 255, 160));
         g2.fillRoundRect(WIDTH - 190, 15, 170, 50, 18, 18);
         g2.setColor(new Color(44, 90, 110));
@@ -98,7 +110,7 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                 default           -> "Batería";
             };
             int x = rand.nextInt(WIDTH - 32);
-            int speed = 2 + rand.nextInt(4); // 2-5 px por frame
+            int speed = 2 + rand.nextInt(4);
             FallingElement fe = new FallingElement(nombre, tipo, puntos, x, -32, speed);
             elementos.agregar(fe);
         }
@@ -113,8 +125,8 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     }
 
     private void detectarColisiones() {
-        NodoElemento temp   = elementos.getCabeza();
-        NodoElemento prev   = null;
+        NodoElemento temp = elementos.getCabeza();
+        NodoElemento prev = null;
         while (temp != null) {
             FallingElement fe = temp.elemento;
             if (fe.fueraDePantalla(HEIGHT)) {
@@ -137,26 +149,31 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    // Detiene el juego y muestra el ResultadoPanel usando el frame principal
     private void terminarJuego() {
         timer.stop();
         ReportePartida reporte = new ReportePartida(score, historial);
         reporte.guardarHistorialTXT();
         reporte.exportarCSV();
         reporte.generarLogros();
-        JFrame topFrame = (JFrame) javax.swing.SwingUtilities.getWindowAncestor(this);
-        topFrame.getContentPane().removeAll();
-        topFrame.add(new ResultadoPanel(score, historial));
-        topFrame.revalidate();
-        topFrame.repaint();
+
+        parentFrame.getContentPane().removeAll();
+        parentFrame.add(new ResultadoPanel(score, historial, parentFrame));
+        parentFrame.revalidate();
+        parentFrame.repaint();
     }
 
-    @Override public void keyPressed(KeyEvent e) {
+    @Override
+    public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_LEFT)
             jugador.move(-PLAYER_SPEED);
         else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
             jugador.move(PLAYER_SPEED);
     }
+
     @Override public void keyReleased(KeyEvent e) {}
     @Override public void keyTyped(KeyEvent e) {}
 }
+
+
 

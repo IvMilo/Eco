@@ -6,14 +6,9 @@ package ecocatch.vista;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import ecocatch.modelo.MultiListaElementos;
-/**
- *
- * @author Milo
- */
-public class GameFrame extends JFrame implements ActionListener {
+
+public class GameFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private MenuPanel menuPanel;
@@ -21,10 +16,6 @@ public class GameFrame extends JFrame implements ActionListener {
     private EstadisticasPanel estadisticasPanel;
     private GamePanel gamePanel;
     private ResultadoPanel resultadoPanel;
-
-    // Guarda el historial de la última partida
-    private int lastScore = 0;
-    private MultiListaElementos lastHistorial = null;
 
     public GameFrame() {
         setTitle("EcoCatch");
@@ -35,29 +26,29 @@ public class GameFrame extends JFrame implements ActionListener {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // Instanciar paneles
         menuPanel = new MenuPanel();
         instruccionesPanel = new InstruccionesPanel();
         estadisticasPanel = new EstadisticasPanel();
-        gamePanel = new GamePanel(); // Nuevo juego al principio
+        gamePanel = new GamePanelPersonalizado(this);
 
-        // Asignar listeners
-        menuPanel.setControladores(this);
-        instruccionesPanel.setControlador(this);
-        estadisticasPanel.setControlador(this);
+        menuPanel.setControladores(e -> {
+            if (e.getSource() == menuPanel.btnJugar)      mostrarJuego();
+            else if (e.getSource() == menuPanel.btnInstrucciones) mostrarInstrucciones();
+            else if (e.getSource() == menuPanel.btnEstadisticas)  mostrarEstadisticas();
+            else if (e.getSource() == menuPanel.btnSalir) System.exit(0);
+        });
+        instruccionesPanel.setControlador(e -> mostrarMenu());
+        estadisticasPanel.setControlador(e -> mostrarMenu());
 
-        // Añadir paneles al cardLayout
         mainPanel.add(menuPanel, "menu");
         mainPanel.add(instruccionesPanel, "instrucciones");
         mainPanel.add(estadisticasPanel, "estadisticas");
         mainPanel.add(gamePanel, "jugar");
-        // El resultadoPanel se agrega dinámicamente cuando sea necesario
 
         add(mainPanel);
         mostrarMenu();
     }
 
-    // Métodos para cambiar de panel
     public void mostrarMenu() {
         cardLayout.show(mainPanel, "menu");
     }
@@ -71,75 +62,33 @@ public class GameFrame extends JFrame implements ActionListener {
     }
 
     public void mostrarJuego() {
-        // Elimina el panel anterior de juego si existe (para reiniciar el estado)
         mainPanel.remove(gamePanel);
-        gamePanel = new GamePanelPersonalizado(this); // Usamos un GamePanel que puede llamar a mostrarResultadoFinal
+        gamePanel = new GamePanelPersonalizado(this);
         mainPanel.add(gamePanel, "jugar");
         cardLayout.show(mainPanel, "jugar");
         SwingUtilities.invokeLater(() -> gamePanel.requestFocusInWindow());
     }
 
     public void mostrarResultadoFinal(int puntaje, MultiListaElementos historial) {
-        // Guarda los datos para posible uso posterior (estadísticas, etc)
-        lastScore = puntaje;
-        lastHistorial = historial;
-
         if (resultadoPanel != null) {
             mainPanel.remove(resultadoPanel);
         }
-        resultadoPanel = new ResultadoPanel(puntaje, historial);
-        resultadoPanel.setControladores(this);
+        resultadoPanel = new ResultadoPanel(puntaje, historial, this);
+
         mainPanel.add(resultadoPanel, "resultado");
+        mainPanel.revalidate();
+        mainPanel.repaint();
         cardLayout.show(mainPanel, "resultado");
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
-
-        // -- MENÚ PRINCIPAL
-        if (src == menuPanel.btnJugar) {
-            mostrarJuego();
-        } else if (src == menuPanel.btnInstrucciones) {
-            mostrarInstrucciones();
-        } else if (src == menuPanel.btnEstadisticas) {
-            mostrarEstadisticas();
-        } else if (src == menuPanel.btnSalir) {
-            System.exit(0);
-        }
-        // -- INSTRUCCIONES
-        else if (src == instruccionesPanel.btnVolver) {
-            mostrarMenu();
-        }
-        // -- ESTADÍSTICAS
-        else if (src == estadisticasPanel.btnVolver) {
-            mostrarMenu();
-        }
-        // -- RESULTADO FINAL (asegúrate de tener la ref al resultadoPanel actual)
-        else if (resultadoPanel != null && src == resultadoPanel.btnMenu) {
-            mostrarMenu();
-        } else if (resultadoPanel != null && src == resultadoPanel.btnReintentar) {
-            mostrarJuego();
-        } else if (resultadoPanel != null && src == resultadoPanel.btnEstadisticas) {
-            mostrarEstadisticas();
-        } else if (resultadoPanel != null && src == resultadoPanel.btnSalir) {
-            System.exit(0);
-        }
-    }
-
-    // Usando una subclase para que GamePanel pueda notificar a GameFrame cuando termina el juego
     private class GamePanelPersonalizado extends GamePanel {
         private final GameFrame frame;
         public GamePanelPersonalizado(GameFrame frame) {
-            super();
+            super(frame);
             this.frame = frame;
         }
         public void notificarFinDeJuego(int score, MultiListaElementos historial) {
             frame.mostrarResultadoFinal(score, historial);
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new GameFrame().setVisible(true));
     }
 }
