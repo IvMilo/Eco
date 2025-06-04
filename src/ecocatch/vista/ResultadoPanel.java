@@ -4,135 +4,97 @@
  */
 package ecocatch.vista;
 
-
-import ecocatch.modelo.FallingElement;
-import ecocatch.modelo.MultiListaElementos;
-
+import ecocatch.modelo.*;
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- *
- * @author Milo
- */
-
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
+import java.util.List;
+import java.util.stream.Collectors;
 /**
  *
  * @author Milo
  */
 
 public class ResultadoPanel extends JPanel {
-    public final JButton btnSalir;
+    public ResultadoPanel(
+            int puntaje,
+            Mision mision,
+            boolean exitoMision,
+            GestorRecursos gestorRecursos,
+            PilaDecisiones pilaDecisiones,
+            Usuario usuario,
+            Runnable onVolverAMisiones,
+            Runnable onReintentarMision
+    ) {
+        setLayout(new BorderLayout(15, 15));
+        setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-    public ResultadoPanel(int puntaje, MultiListaElementos historial, JFrame parent) {
-        setLayout(new BorderLayout(0, 10));
-        setBackground(new Color(232, 255, 245));
-
-        JLabel lblTitulo = new JLabel("¡Juego Terminado!", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 36));
-        lblTitulo.setForeground(new Color(36, 160, 90));
-        lblTitulo.setBorder(BorderFactory.createEmptyBorder(32, 0, 8, 0));
+        // Título
+        JLabel lblTitulo = new JLabel("Resultados de la Misión", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
         add(lblTitulo, BorderLayout.NORTH);
 
-        JPanel centro = new JPanel();
-        centro.setOpaque(false);
-        centro.setLayout(new BoxLayout(centro, BoxLayout.Y_AXIS));
-        JLabel lblPuntaje = new JLabel("Tu puntaje: " + puntaje, SwingConstants.CENTER);
-        lblPuntaje.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        lblPuntaje.setForeground(new Color(34, 85, 119));
-        lblPuntaje.setAlignmentX(Component.CENTER_ALIGNMENT);
-        centro.add(lblPuntaje);
-        centro.add(Box.createVerticalStrut(12));
+        // Panel central con info principal
+        JPanel panelCentral = new JPanel();
+        panelCentral.setLayout(new BoxLayout(panelCentral, BoxLayout.Y_AXIS));
+        panelCentral.setOpaque(false);
 
-        JTextArea areaLogros = new JTextArea(calcularLogros(puntaje, historial));
-        areaLogros.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        areaLogros.setForeground(new Color(44, 115, 54));
-        areaLogros.setOpaque(false);
-        areaLogros.setEditable(false);
-        areaLogros.setAlignmentX(Component.CENTER_ALIGNMENT);
-        areaLogros.setBorder(BorderFactory.createTitledBorder("Logros desbloqueados"));
-        centro.add(areaLogros);
-        centro.add(Box.createVerticalStrut(8));
+        // Puntaje
+        JLabel lblPuntaje = new JLabel("Puntaje: " + puntaje, SwingConstants.CENTER);
+        lblPuntaje.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        panelCentral.add(lblPuntaje);
 
-        JTable tabla = new JTable(resumenPorTipo(historial), new String[] {"Tipo", "Cantidad"});
-        tabla.setEnabled(false);
-        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        tabla.setRowHeight(26);
-        tabla.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
-        JScrollPane scrollTabla = new JScrollPane(tabla);
-        scrollTabla.setPreferredSize(new Dimension(340, 90));
-        scrollTabla.setBorder(BorderFactory.createTitledBorder("Resumen de objetos recogidos"));
-        centro.add(scrollTabla);
+        // Estado misión
+        JLabel lblEstadoMision = new JLabel(
+            "Misión: " + mision.getNombre() + 
+            (exitoMision ? " (¡Completada!)" : " (No completada)")
+        );
+        lblEstadoMision.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        panelCentral.add(lblEstadoMision);
 
-        add(centro, BorderLayout.CENTER);
+        // Objetivo misión
+        JLabel lblObjetivo = new JLabel("Objetivo: " + mision.getObjetivo());
+        lblObjetivo.setFont(new Font("Segoe UI", Font.ITALIC, 15));
+        panelCentral.add(lblObjetivo);
 
-        JPanel sur = new JPanel(new FlowLayout(FlowLayout.CENTER, 24, 18));
-        sur.setOpaque(false);
+        // Recursos finales
+        panelCentral.add(Box.createVerticalStrut(10));
+        panelCentral.add(new JLabel("Recursos finales:", SwingConstants.CENTER));
+        panelCentral.add(new JLabel("💰 Dinero: " + gestorRecursos.getCantidad(Recurso.Tipo.DINERO)));
+        panelCentral.add(new JLabel("⚡ Energía: " + gestorRecursos.getCantidad(Recurso.Tipo.ENERGIA)));
+        panelCentral.add(new JLabel("💧 Agua: " + gestorRecursos.getCantidad(Recurso.Tipo.AGUA)));
 
-        btnSalir = crearBoton("Salir", new Color(200, 60, 90));
-        btnSalir.addActionListener(e -> System.exit(0));
-        sur.add(btnSalir);
-
-        add(sur, BorderLayout.SOUTH);
-    }
-
-    private JButton crearBoton(String texto, Color color) {
-        JButton btn = new JButton(texto);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        btn.setBackground(color);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setOpaque(true);
-        btn.setBorder(BorderFactory.createEmptyBorder(8, 22, 8, 22));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) { btn.setBackground(color.darker()); }
-            public void mouseExited(java.awt.event.MouseEvent evt) { btn.setBackground(color); }
-        });
-        return btn;
-    }
-
-    private String calcularLogros(int puntaje, MultiListaElementos historial) {
-        int total = 0, organicos = 0, inorganicos = 0, toxicos = 0;
-        if (historial != null) {
-            for (FallingElement el : historial) {
-                total++;
-                String tipo = el.getTipo();
-                if ("Orgánico".equalsIgnoreCase(tipo)) organicos++;
-                else if ("Inorgánico".equalsIgnoreCase(tipo)) inorganicos++;
-                else if ("Tóxico".equalsIgnoreCase(tipo)) toxicos++;
+        // Decisiones tomadas
+        panelCentral.add(Box.createVerticalStrut(10));
+        List<Decision> decisiones = pilaDecisiones.getDecisiones().stream().collect(Collectors.toList());
+        panelCentral.add(new JLabel("Decisiones tomadas:", SwingConstants.LEFT));
+        if (decisiones.isEmpty()) {
+            panelCentral.add(new JLabel("Ninguna."));
+        } else {
+            for (Decision d : decisiones) {
+                panelCentral.add(new JLabel("• " + d.getDescripcion() + 
+                    " (Corto: " + d.getEfectoCorto() + ", Largo: " + d.getEfectoLargo() + ")"));
             }
         }
-        StringBuilder sb = new StringBuilder();
-        if (total >= 20) sb.append("• ¡Recolector Master! (20+ objetos)\n");
-        if (organicos >= 10) sb.append("• Guardián Verde (10+ orgánicos)\n");
-        if (toxicos >= 5) sb.append("• Manejo Tóxico (5+ tóxicos)\n");
-        if (puntaje >= 50) sb.append("• ¡Puntaje épico! (50+ puntos)\n");
-        if (sb.length() == 0) sb.append("Aún sin logros especiales. ¡Sigue intentando!");
-        return sb.toString();
-    }
 
-    private String[][] resumenPorTipo(MultiListaElementos historial) {
-        Map<String, Integer> mapa = new HashMap<>();
-        if (historial != null) {
-            for (FallingElement el : historial) {
-                String tipo = el.getTipo();
-                mapa.put(tipo, mapa.getOrDefault(tipo, 0) + 1);
-            }
-        }
-        String[] tipos = {"Orgánico", "Inorgánico", "Tóxico"};
-        String[][] data = new String[tipos.length][2];
-        for (int i = 0; i < tipos.length; i++) {
-            data[i][0] = tipos[i];
-            data[i][1] = String.valueOf(mapa.getOrDefault(tipos[i], 0));
-        }
-        return data;
+        // Logros y progreso usuario
+        panelCentral.add(Box.createVerticalStrut(10));
+        JLabel lblUsuario = new JLabel("Usuario: " + usuario.getUsername(), SwingConstants.RIGHT);
+        lblUsuario.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        panelCentral.add(lblUsuario);
+        JLabel lblProgreso = new JLabel("Misiones completadas: " + usuario.getMisionesCompletadas().size(), SwingConstants.RIGHT);
+        panelCentral.add(lblProgreso);
+
+        add(panelCentral, BorderLayout.CENTER);
+
+        // Botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 10));
+        JButton btnVolver = new JButton("Volver a misiones");
+        JButton btnReintentar = new JButton("Reintentar misión");
+        panelBotones.add(btnVolver);
+        panelBotones.add(btnReintentar);
+        add(panelBotones, BorderLayout.SOUTH);
+
+        btnVolver.addActionListener(e -> onVolverAMisiones.run());
+        btnReintentar.addActionListener(e -> onReintentarMision.run());
     }
 }

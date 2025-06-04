@@ -4,91 +4,127 @@
  */
 package ecocatch.vista;
 
+import ecocatch.modelo.*;
 import javax.swing.*;
 import java.awt.*;
-import ecocatch.modelo.MultiListaElementos;
 
+/**
+ * GameFrame principal con integración completa de usuarios, misiones, recursos, decisiones y resultados.
+ * Modular, escalable y compatible con la jugabilidad original.
+ */
 public class GameFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
-    private MenuPanel menuPanel;
-    private InstruccionesPanel instruccionesPanel;
-    private EstadisticasPanel estadisticasPanel;
+
+    // Gestores y entidades principales
+    private GestorUsuarios gestorUsuarios;
+    private GestorMisiones gestorMisiones;
+    private GestorRecursos gestorRecursos;
+    private PilaDecisiones pilaDecisiones;
+    private Usuario usuarioActual;
+
+    // Paneles principales
+    private LoginPanel loginPanel;
+    private RegistroPanel registroPanel;
+    private MisionesPanel misionesPanel;
+    private RecursosPanel recursosPanel;
+    private DecisionesPanel decisionesPanel;
     private GamePanel gamePanel;
     private ResultadoPanel resultadoPanel;
 
     public GameFrame() {
-        setTitle("EcoCatch");
+        setTitle("EcoCatch - Simulación Cambio Climático");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(900, 700);
         setLocationRelativeTo(null);
 
+        // Inicialización de modelo
+        gestorUsuarios = new GestorUsuarios();
+        gestorMisiones = new GestorMisiones();
+        gestorRecursos = new GestorRecursos();
+        pilaDecisiones = new PilaDecisiones();
+
+        // Layout principal
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        menuPanel = new MenuPanel();
-        instruccionesPanel = new InstruccionesPanel();
-        estadisticasPanel = new EstadisticasPanel();
-        gamePanel = new GamePanelPersonalizado(this);
+        // Paneles de autenticación
+        loginPanel = new LoginPanel(gestorUsuarios, this::mostrarMisiones, this::mostrarRegistro);
+        registroPanel = new RegistroPanel(gestorUsuarios, this::mostrarLogin, this::mostrarLogin);
 
-        menuPanel.setControladores(e -> {
-            if (e.getSource() == menuPanel.btnJugar)      mostrarJuego();
-            else if (e.getSource() == menuPanel.btnInstrucciones) mostrarInstrucciones();
-            else if (e.getSource() == menuPanel.btnEstadisticas)  mostrarEstadisticas();
-            else if (e.getSource() == menuPanel.btnSalir) System.exit(0);
-        });
-        instruccionesPanel.setControlador(e -> mostrarMenu());
-        estadisticasPanel.setControlador(e -> mostrarMenu());
-
-        mainPanel.add(menuPanel, "menu");
-        mainPanel.add(instruccionesPanel, "instrucciones");
-        mainPanel.add(estadisticasPanel, "estadisticas");
-        mainPanel.add(gamePanel, "jugar");
+        mainPanel.add(loginPanel, "login");
+        mainPanel.add(registroPanel, "registro");
 
         add(mainPanel);
-        mostrarMenu();
+        mostrarLogin();
     }
 
-    public void mostrarMenu() {
-        cardLayout.show(mainPanel, "menu");
+    public void mostrarLogin() {
+        cardLayout.show(mainPanel, "login");
+        loginPanel.limpiarCampos();
     }
 
-    public void mostrarInstrucciones() {
-        cardLayout.show(mainPanel, "instrucciones");
+    public void mostrarRegistro() {
+        cardLayout.show(mainPanel, "registro");
     }
 
-    public void mostrarEstadisticas() {
-        cardLayout.show(mainPanel, "estadisticas");
+    public void mostrarMisiones() {
+        usuarioActual = gestorUsuarios.getUsuarioActual();
+        misionesPanel = new MisionesPanel(gestorMisiones, usuarioActual, this::iniciarMision);
+        mainPanel.add(misionesPanel, "misiones");
+        cardLayout.show(mainPanel, "misiones");
     }
 
-    public void mostrarJuego() {
-        mainPanel.remove(gamePanel);
-        gamePanel = new GamePanelPersonalizado(this);
-        mainPanel.add(gamePanel, "jugar");
-        cardLayout.show(mainPanel, "jugar");
-        SwingUtilities.invokeLater(() -> gamePanel.requestFocusInWindow());
+    /**
+     * Inicia la misión seleccionada (crea panel de juego e integra recursos y decisiones).
+     */
+    public void iniciarMision() {
+        int idMision = misionesPanel.getMisionSeleccionada();
+        recursosPanel = new RecursosPanel(gestorRecursos);
+        decisionesPanel = new DecisionesPanel(pilaDecisiones, recursosPanel::actualizar);
+
+        // Panel del catch game con integración de modelos ampliados
+        gamePanel = new GamePanel(this, gestorMisiones.getMision(idMision), gestorRecursos, pilaDecisiones, usuarioActual);
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(recursosPanel, BorderLayout.NORTH);
+        wrapper.add(gamePanel, BorderLayout.CENTER);
+        wrapper.add(decisionesPanel, BorderLayout.SOUTH);
+
+        mainPanel.add(wrapper, "juego");
+        cardLayout.show(mainPanel, "juego");
     }
 
-    public void mostrarResultadoFinal(int puntaje, MultiListaElementos historial) {
-        if (resultadoPanel != null) {
-            mainPanel.remove(resultadoPanel);
-        }
-        resultadoPanel = new ResultadoPanel(puntaje, historial, this);
-
+    /**
+     * Muestra el panel de resultados tras terminar una partida/misión.
+     */
+    public void mostrarResultados(int score, Mision mision, boolean exitoMision,
+                                  GestorRecursos gestorRecursos, PilaDecisiones pilaDecisiones, Usuario usuario) {
+        resultadoPanel = new ResultadoPanel(
+            score, mision, exitoMision, gestorRecursos, pilaDecisiones, usuario,
+            this::mostrarMisiones, // acción "volver"
+            () -> iniciarMisionDesdeResultado(mision.getId()) // acción "reintentar"
+        );
         mainPanel.add(resultadoPanel, "resultado");
-        mainPanel.revalidate();
-        mainPanel.repaint();
         cardLayout.show(mainPanel, "resultado");
     }
 
-    private class GamePanelPersonalizado extends GamePanel {
-        private final GameFrame frame;
-        public GamePanelPersonalizado(GameFrame frame) {
-            super(frame);
-            this.frame = frame;
-        }
-        public void notificarFinDeJuego(int score, MultiListaElementos historial) {
-            frame.mostrarResultadoFinal(score, historial);
-        }
+    /**
+     * Permite reintentar una misión directamente desde el panel de resultados.
+     */
+    private void iniciarMisionDesdeResultado(int idMision) {
+        // Puedes resetear recursos/decisiones si así lo requiere el diseño
+        recursosPanel = new RecursosPanel(gestorRecursos);
+        decisionesPanel = new DecisionesPanel(pilaDecisiones, recursosPanel::actualizar);
+        gamePanel = new GamePanel(this, gestorMisiones.getMision(idMision), gestorRecursos, pilaDecisiones, usuarioActual);
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(recursosPanel, BorderLayout.NORTH);
+        wrapper.add(gamePanel, BorderLayout.CENTER);
+        wrapper.add(decisionesPanel, BorderLayout.SOUTH);
+
+        mainPanel.add(wrapper, "juego");
+        cardLayout.show(mainPanel, "juego");
     }
 }
+

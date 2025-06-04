@@ -4,26 +4,23 @@
  */
 package ecocatch.modelo;
 
-import java.awt.BasicStroke;
-import java.awt.Graphics2D;
-import java.awt.Color;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.io.IOException;
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 /**
  *
  * @author Milo
  */
-public class Player {
-    private int x;
-    private final int y;
-    private final int width = 150, height = 150;
-    private final int panelWidth;
 
-    private static Image playerImg;
+public class Player {
+    private int x, y;
+    private int limiteDerecho; // Límite derecho del panel (para no salirse)
+    private final int ancho = 60;
+    private final int alto = 40;
+
+    private static BufferedImage playerImg;
 
     static {
         try {
@@ -33,27 +30,56 @@ public class Player {
         }
     }
 
-    public Player(int startX, int y, int panelWidth) {
-        this.x = startX; this.y = y; this.panelWidth = panelWidth;
+    public Player(int x, int y, int limiteDerecho) {
+        this.x = x;
+        this.y = y;
+        this.limiteDerecho = limiteDerecho;
     }
-    public void move(int dx) {
-        x += dx;
-        if (x < 0) x = 0;
-        if (x + width > panelWidth) x = panelWidth - width;
+
+    public void setLimiteDerecho(int limiteDerecho) {
+        this.limiteDerecho = limiteDerecho;
     }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+    public void setY(int y) {
+        this.y = y;
+    }
+
     public int getX() { return x; }
     public int getY() { return y; }
 
-    public void draw(Graphics2D g2d) {
+    /**
+     * Mueve el jugador horizontalmente, respetando los límites.
+     */
+    public void move(int delta) {
+        x += delta;
+        if (x < 0) x = 0;
+        if (x > limiteDerecho - ancho) x = limiteDerecho - ancho;
+    }
+
+    /**
+     * Dibuja al jugador.
+     */
+    public void draw(Graphics2D g2) {
         if (playerImg != null) {
-            g2d.drawImage(playerImg, x, y, width, height, null);
+            g2.drawImage(playerImg, x, y, ancho, alto, null);
         } else {
-            g2d.setColor(java.awt.Color.RED);
-            g2d.fillRect(x, y, width, height);
+            // Fallback: dibujar un rectángulo si no hay imagen
+            g2.setColor(new Color(120, 150, 90));
+            g2.fillRoundRect(x, y, ancho, alto, 18, 18);
+            g2.setColor(new Color(60, 100, 70));
+            g2.fillRect(x + 15, y + 10, 30, 20);
+            g2.setColor(Color.BLACK);
+            g2.drawRoundRect(x, y, ancho, alto, 18, 18);
         }
     }
 
+    /**
+     * Devuelve los límites para colisiones.
+     */
     public Rectangle getBounds() {
-        return new Rectangle(x, y, width, height);
+        return new Rectangle(x, y, ancho, alto);
     }
 }
