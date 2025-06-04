@@ -217,11 +217,7 @@ private int contadorToxicos = 0;
     };
 
     private void mostrarDecisionInteractiva(String titulo, Decision[] opciones, String tipo) {
-        String[] labels = new String[opciones.length];
-        for (int i = 0; i < opciones.length; i++) labels[i] = opciones[i].getDescripcion();
-        int eleccion = JOptionPane.showOptionDialog(
-            this, "¿Qué deseas hacer?", titulo, JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, labels, labels[0]
-        );
+        int eleccion = EcoDecisionDialog.showDecisionDialog(this, titulo, opciones);
         if (eleccion >= 0 && eleccion < opciones.length) {
             Decision d = opciones[eleccion];
             pilaDecisiones.agregarDecision(d);

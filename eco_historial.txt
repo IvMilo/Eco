@@ -341,3 +341,24 @@ Resumen por tipo:
 - Inorgánico: 9
 - Tóxico: 10
 
+===== PARTIDA: 2025-06-04 01:07:41 =====
+Puntaje total: 59 pts
+Resumen por tipo:
+- Orgánico: 0
+- Inorgánico: 3
+- Tóxico: 10
+
+===== PARTIDA: 2025-06-04 01:27:52 =====
+Puntaje total: 55 pts
+Resumen por tipo:
+- Orgánico: 2
+- Inorgánico: 1
+- Tóxico: 10
+
+===== PARTIDA: 2025-06-04 01:30:40 =====
+Puntaje total: 6 pts
+Resumen por tipo:
+- Orgánico: 3
+- Inorgánico: 1
+- Tóxico: 0
+
