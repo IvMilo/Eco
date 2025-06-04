@@ -14,13 +14,13 @@ import java.util.stream.Collectors;
  * @author Milo
  */
 
-
 public class MisionesPanel extends JPanel {
     private final GestorMisiones gestorMisiones;
     private final Usuario usuario;
     private final JButton btnJugar;
     private final JList<String> listaMisiones;
     private final JLabel lblObjetivo, lblEstado;
+    private List<Mision> misiones; // Cambia a variable de instancia
 
     public MisionesPanel(GestorMisiones gestorMisiones, Usuario usuario, Runnable onSeleccionarMision) {
         this.gestorMisiones = gestorMisiones;
@@ -31,7 +31,8 @@ public class MisionesPanel extends JPanel {
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         add(lblTitulo, BorderLayout.NORTH);
 
-        List<Mision> misiones = gestorMisiones.getMisiones().stream().sorted((a,b) -> a.getId()-b.getId()).collect(Collectors.toList());
+        // Inicialmente carga todas las misiones
+        misiones = gestorMisiones.getMisiones().stream().sorted((a,b) -> a.getId()-b.getId()).collect(Collectors.toList());
         DefaultListModel<String> modelo = new DefaultListModel<>();
         for (Mision m : misiones) {
             modelo.addElement("[" + m.getId() + "] " + m.getNombre() + (usuario.getMisionesCompletadas().contains(m.getId()) ? " (✔)" : ""));
@@ -68,8 +69,29 @@ public class MisionesPanel extends JPanel {
         });
     }
 
+    /**
+     * Refresca el listado de misiones mostrado en la lista, útil después de añadir o borrar misiones.
+     */
+    public void actualizarMisiones() {
+        misiones = gestorMisiones.getMisiones().stream().sorted((a,b) -> a.getId()-b.getId()).collect(Collectors.toList());
+        DefaultListModel<String> modelo = new DefaultListModel<>();
+        for (Mision m : misiones) {
+            modelo.addElement("[" + m.getId() + "] " + m.getNombre() + (usuario.getMisionesCompletadas().contains(m.getId()) ? " (✔)" : ""));
+        }
+        listaMisiones.setModel(modelo);
+        lblObjetivo.setText(" ");
+        lblEstado.setText(" ");
+        listaMisiones.clearSelection();
+        listaMisiones.revalidate();
+        listaMisiones.repaint();
+    }
+
     public int getMisionSeleccionada() {
         int idx = listaMisiones.getSelectedIndex();
-        return idx + 1; // los ids empiezan en 1
+        // Devuelve el id real o -1 si no hay selección
+        if (idx >= 0 && idx < misiones.size()) {
+            return misiones.get(idx).getId();
+        }
+        return -1;
     }
 }

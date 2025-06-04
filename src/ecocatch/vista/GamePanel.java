@@ -24,6 +24,9 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private final Random rand = new Random();
     private final Timer timer;
     private final MultiListaElementos historial = new MultiListaElementos();
+    private int contadorOrganicos = 0;
+private int contadorInorganicos = 0;
+private int contadorToxicos = 0;
 
     // Nuevas integraciones:
     private final Mision mision;
@@ -65,6 +68,8 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                 case 1 -> objetivoOrganicos = 3;
                 case 2 -> objetivoInorganicos = 3;
                 case 3 -> objetivoToxicos = 2;
+                case 4 -> objetivoToxicos = 10;
+                case 5 -> objetivoToxicos = 10;
                 // Agregar casos para futuras misiones
             }
         }
@@ -166,7 +171,88 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
             temp = temp.siguiente;
         }
     }
+    
+    private final Decision[] decisionesOrganico = {
+    new Decision(
+        "Compostar los residuos",
+        "¡Compostaste! Ganas agua (+5), gastas energía (-2).",
+        "El suelo mejora, pero consumes algo de energía en el proceso."
+    ),
+    new Decision(
+        "Tirar a la basura común",
+        "Los residuos se pierden y generan metano. Pierdes agua (-2).",
+        "Aumenta la contaminación por metano en el basurero."
+    )
+    };
 
+    private final Decision[] decisionesInorganico = {
+        new Decision(
+            "Reciclar plásticos",
+            "Reciclas y ganas dinero (+3), gastas energía (-5).",
+            "Reduces la contaminación y ahorras recursos a largo plazo."
+        ),
+        new Decision(
+            "Incinerar plásticos",
+            "Eliminas rápido el residuo, pierdes agua (-3).",
+            "Genera emisiones contaminantes al aire."
+        ),
+        new Decision(
+            "Enterrar plásticos",
+            "Ocupas espacio en el vertedero, pierdes poca agua (-1).",
+            "Contaminación persistente en el subsuelo."
+        )
+    };
+
+    private final Decision[] decisionesToxico = {
+        new Decision(
+            "Llevar batería a reciclaje",
+            "Evitas contaminación, pierdes dinero (-10).",
+            "Proteges el ambiente, pero tiene costo económico."
+        ),
+        new Decision(
+            "Tirar batería a la basura",
+            "Muy contaminante, pierdes mucha agua (-10).",
+            "El suelo y el agua quedan contaminados por metales pesados."
+        )
+    };
+
+    private void mostrarDecisionInteractiva(String titulo, Decision[] opciones, String tipo) {
+        String[] labels = new String[opciones.length];
+        for (int i = 0; i < opciones.length; i++) labels[i] = opciones[i].getDescripcion();
+        int eleccion = JOptionPane.showOptionDialog(
+            this, "¿Qué deseas hacer?", titulo, JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, labels, labels[0]
+        );
+        if (eleccion >= 0 && eleccion < opciones.length) {
+            Decision d = opciones[eleccion];
+            pilaDecisiones.agregarDecision(d);
+            // Aplica efectos manualmente según tipo y opción
+            if (tipo.equals("Orgánico")) {
+                if (eleccion == 0) { // Compostar
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.AGUA, +5);
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.ENERGIA, -2);
+                } else { // Tirar a la basura
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.AGUA, -2);
+                }
+            } else if (tipo.equals("Inorgánico")) {
+                if (eleccion == 0) { // Reciclar
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.ENERGIA, -5);
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.DINERO, +3);
+                } else if (eleccion == 1) { // Incinerar
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.AGUA, -3);
+                } else { // Enterrar
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.AGUA, -1);
+                }
+            } else if (tipo.equals("Tóxico")) {
+                if (eleccion == 0) { // Reciclar batería
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.DINERO, -10);
+                } else { // Tirar a la basura
+                    gestorRecursos.modificarRecurso(Recurso.Tipo.AGUA, -10);
+                }
+            }
+            JOptionPane.showMessageDialog(this, d.getEfectoCorto() + "\n" + d.getEfectoLargo(), "Consecuencia", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
     private void detectarColisiones() {
         NodoElemento temp = elementos.getCabeza();
         NodoElemento prev = null;
@@ -181,25 +267,32 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                 score += fe.getPuntos();
                 historial.agregar(fe);
 
-                // Objetivos de misión
+                // Objetivos de misión y contadores para mostrar decisiones
                 switch (fe.getTipo()) {
-                    case "Orgánico"   -> { if (objetivoOrganicos > 0) objetivoOrganicos--; }
-                    case "Inorgánico" -> { if (objetivoInorganicos > 0) objetivoInorganicos--; }
-                    case "Tóxico"     -> { if (objetivoToxicos > 0) objetivoToxicos--; }
+                    case "Orgánico" -> { if (objetivoOrganicos > 0) objetivoOrganicos--; contadorOrganicos++; }
+                    case "Inorgánico" -> { if (objetivoInorganicos > 0) objetivoInorganicos--; contadorInorganicos++; }
+                    case "Tóxico" -> { if (objetivoToxicos > 0) objetivoToxicos--; contadorToxicos++; }
                 }
 
-                // Recursos: ejemplo simple (puedes ajustar la lógica)
+                // Recursos inmediatos (puedes conservarlo o quitarlo)
                 switch (fe.getTipo()) {
-                    case "Orgánico"   -> gestorRecursos.modificarRecurso(Recurso.Tipo.AGUA, 5);
+                    case "Orgánico" -> gestorRecursos.modificarRecurso(Recurso.Tipo.AGUA, 5);
                     case "Inorgánico" -> gestorRecursos.modificarRecurso(Recurso.Tipo.ENERGIA, 10);
-                    case "Tóxico"     -> gestorRecursos.modificarRecurso(Recurso.Tipo.DINERO, -8);
+                    case "Tóxico" -> gestorRecursos.modificarRecurso(Recurso.Tipo.DINERO, -8);
                 }
 
-                // Decisiones: ejemplo de decisión automática
-                if (fe.getTipo().equals("Tóxico")) {
-                    pilaDecisiones.agregarDecision(
-                        new Decision("Atrapaste tóxico", "Baja dinero", "Impacto ambiental negativo")
-                    );
+                // Decisiones interactivas al alcanzar cierto umbral
+                if (fe.getTipo().equals("Orgánico") && contadorOrganicos == 5) {
+                    mostrarDecisionInteractiva("¡Has recogido 5 orgánicos!", decisionesOrganico, "Orgánico");
+                    contadorOrganicos = 0;
+                }
+                if (fe.getTipo().equals("Inorgánico") && contadorInorganicos == 5) {
+                    mostrarDecisionInteractiva("¡Has recogido 5 inorgánicos!", decisionesInorganico, "Inorgánico");
+                    contadorInorganicos = 0;
+                }
+                if (fe.getTipo().equals("Tóxico") && contadorToxicos == 5) {
+                    mostrarDecisionInteractiva("¡Has recogido 5 tóxicos!", decisionesToxico, "Tóxico");
+                    contadorToxicos = 0;
                 }
 
                 elementos.eliminar(temp, prev);

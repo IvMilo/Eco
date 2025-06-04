@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package ecocatch.modelo;
-
 import java.util.LinkedList;
 import java.util.Queue;
 import java.io.Serializable;

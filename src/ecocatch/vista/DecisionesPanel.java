@@ -7,42 +7,37 @@ package ecocatch.vista;
 import ecocatch.modelo.*;
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
-import java.util.stream.Collectors;
 /**
  *
  * @author Milo
  */
 
-
 public class DecisionesPanel extends JPanel {
     private final PilaDecisiones pilaDecisiones;
     private final DefaultListModel<String> modelo;
-    private final JList<String> listaDecisiones;
-    private final JButton btnDeshacer;
 
-    public DecisionesPanel(PilaDecisiones pilaDecisiones, Runnable onDeshacer) {
+    public DecisionesPanel(PilaDecisiones pilaDecisiones, Runnable onActualizar) {
         this.pilaDecisiones = pilaDecisiones;
-        setLayout(new BorderLayout());
-        modelo = new DefaultListModel<>();
-        listaDecisiones = new JList<>(modelo);
-        add(new JLabel("Decisiones tomadas:"), BorderLayout.NORTH);
-        add(new JScrollPane(listaDecisiones), BorderLayout.CENTER);
-        btnDeshacer = new JButton("Deshacer última");
-        add(btnDeshacer, BorderLayout.SOUTH);
+        this.modelo = new DefaultListModel<>();
 
-        btnDeshacer.addActionListener(e -> {
-            pilaDecisiones.deshacerDecision();
-            actualizar();
-            onDeshacer.run();
-        });
+        setLayout(new BorderLayout());
+        JLabel lblTitulo = new JLabel("Historial de Decisiones", SwingConstants.CENTER);
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        add(lblTitulo, BorderLayout.NORTH);
+
+        JList<String> lista = new JList<>(modelo);
+        add(new JScrollPane(lista), BorderLayout.CENTER);
+
+        actualizar();
     }
 
     public void actualizar() {
         modelo.clear();
-        List<Decision> decisiones = pilaDecisiones.getDecisiones().stream().collect(Collectors.toList());
-        for (Decision d : decisiones) {
-            modelo.addElement(d.getDescripcion() + " (Corto: " + d.getEfectoCorto() + ", Largo: " + d.getEfectoLargo() + ")");
+        for (Decision d : pilaDecisiones.getDecisiones()) {
+            modelo.addElement(
+                d.getDescripcion() + " | " + d.getEfectoCorto() + " | " + d.getEfectoLargo()
+            );
         }
     }
 }
+

@@ -11,7 +11,6 @@ import java.util.*;
  * @author Milo
  */
 
-
 public class GestorMisiones {
     private Map<Integer, Mision> misiones; // Multilista de misiones por ID
     private static final String ARCHIVO_MISIONES = "ecocatch_misiones.dat";
@@ -29,11 +28,28 @@ public class GestorMisiones {
         agregarMision(new Mision(1, "Deforestación", "Evita la deforestación atrapando residuos orgánicos.", "Atrapa 3 elementos orgánicos."));
         agregarMision(new Mision(2, "Deshielo", "Reduce el deshielo atrapando recursos energéticos.", "Atrapa 3 elementos inorgánicos."));
         agregarMision(new Mision(3, "Emisiones", "Reduce emisiones atrapando baterías tóxicas.", "Atrapa 2 elementos tóxicos."));
-        // ... agregar más misiones según necesidad
+        agregarMision(new Mision(4, "Toxico", "Reduce emisiones atrapando baterías tóxicas.", "Atrapa 10 elementos tóxicos."));
+        // ... puedes agregar más misiones aquí
     }
 
     public void agregarMision(Mision mision) {
         misiones.put(mision.getId(), mision);
+    }
+
+    /**
+     * Agrega una nueva misión generando automáticamente un ID único.
+     */
+    public void agregarMisionAutoId(String nombre, String descripcion, String objetivo) {
+        int nuevoId = getSiguienteMisionId();
+        Mision mision = new Mision(nuevoId, nombre, descripcion, objetivo);
+        agregarMision(mision);
+    }
+
+    /**
+     * Devuelve el siguiente ID único para una nueva misión.
+     */
+    public int getSiguienteMisionId() {
+        return misiones.keySet().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
     }
 
     public Collection<Mision> getMisiones() {
