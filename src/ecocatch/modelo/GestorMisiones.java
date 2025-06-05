@@ -28,7 +28,8 @@ public class GestorMisiones {
         agregarMision(new Mision(1, "Deforestación", "Evita la deforestación atrapando residuos orgánicos.", "Atrapa 3 elementos orgánicos."));
         agregarMision(new Mision(2, "Deshielo", "Reduce el deshielo atrapando recursos energéticos.", "Atrapa 3 elementos inorgánicos."));
         agregarMision(new Mision(3, "Emisiones", "Reduce emisiones atrapando baterías tóxicas.", "Atrapa 2 elementos tóxicos."));
-        agregarMision(new Mision(4, "Toxico", "Reduce emisiones atrapando baterías tóxicas.", "Atrapa 10 elementos tóxicos."));
+        agregarMision(new Mision(4, "Toxico", "Atrapa muchas baterías tóxicas.", "Atrapa 10 elementos tóxicos."));
+        agregarMision(new Mision(5, "Rey del reciclaje", "Reduce la contaminación", "Atrapa 15 elementos tóxicos, 10 elementos orgánicos y 20 elementos inorgánicos. "));
         // ... puedes agregar más misiones aquí
     }
 

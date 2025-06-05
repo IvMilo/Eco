@@ -58,7 +58,7 @@ public class RegistroPanel extends JPanel {
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 32));
         lblTitulo.setForeground(new Color(46, 125, 50));
         try {
-            lblTitulo.setIcon(new ImageIcon(getClass().getResource("/ecocatch/recursos/Logo.png")));
+            lblTitulo.setIcon(new ImageIcon(getClass().getResource("/ecocatch/recursos/leaf_icon.png")));
             lblTitulo.setIconTextGap(16);
         } catch (Exception e) {
             // Si no hay icono, solo texto

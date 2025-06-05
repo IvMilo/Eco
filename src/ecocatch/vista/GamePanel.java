@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
+import javax.sound.sampled.*;
+import java.io.IOException;
 
 /**
  *
@@ -25,8 +27,8 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private final Timer timer;
     private final MultiListaElementos historial = new MultiListaElementos();
     private int contadorOrganicos = 0;
-private int contadorInorganicos = 0;
-private int contadorToxicos = 0;
+    private int contadorInorganicos = 0;
+    private int contadorToxicos = 0;
 
     // Nuevas integraciones:
     private final Mision mision;
@@ -41,6 +43,9 @@ private int contadorToxicos = 0;
 
     private boolean jugadorInicializado = false;
 
+    // Fondo
+    private Image fondoJuego;
+
     public GamePanel(GameFrame parentFrame, Mision mision, GestorRecursos gestorRecursos, PilaDecisiones pilaDecisiones, Usuario usuario) {
         this.parentFrame = parentFrame;
         this.mision = mision;
@@ -52,6 +57,12 @@ private int contadorToxicos = 0;
         setBackground(new Color(240, 255, 252));
         setFocusable(true);
         addKeyListener(this);
+
+        // Cargar fondo
+        java.net.URL fondoURL = getClass().getResource("/ecocatch/recursos/Background.jpg");
+        if (fondoURL != null) {
+            fondoJuego = new ImageIcon(fondoURL).getImage();
+        }
 
         // El jugador se inicializa en el primer paintComponent cuando las dimensiones ya son válidas
         jugador = null;
@@ -69,7 +80,11 @@ private int contadorToxicos = 0;
                 case 2 -> objetivoInorganicos = 3;
                 case 3 -> objetivoToxicos = 2;
                 case 4 -> objetivoToxicos = 10;
-                case 5 -> objetivoToxicos = 10;
+                case 5 -> {
+                    objetivoToxicos = 15;
+                    objetivoOrganicos = 10;
+                    objetivoInorganicos = 20;
+                }
                 // Agregar casos para futuras misiones
             }
         }
@@ -89,6 +104,18 @@ private int contadorToxicos = 0;
         int w = getWidth();
         int h = getHeight();
 
+        // Fondo personalizado (si existe)
+        if (fondoJuego != null) {
+            g.drawImage(fondoJuego, 0, 0, w, h, this);
+        } else {
+            // Fondo degradado de respaldo
+            Graphics2D g2 = (Graphics2D) g.create();
+            GradientPaint gp = new GradientPaint(0, 0, new Color(175, 205, 240), 0, h, new Color(233, 255, 234));
+            g2.setPaint(gp);
+            g2.fillRect(0, 0, w, h);
+            g2.dispose();
+        }
+
         // Inicializa el jugador con las dimensiones correctas la primera vez
         if (!jugadorInicializado || jugador == null) {
             int yJugador = h - 120;
@@ -99,11 +126,6 @@ private int contadorToxicos = 0;
         }
 
         Graphics2D g2 = (Graphics2D) g.create();
-
-        // Fondo
-        GradientPaint gp = new GradientPaint(0, 0, new Color(175, 205, 240), 0, h, new Color(233, 255, 234));
-        g2.setPaint(gp);
-        g2.fillRect(0, 0, w, h);
 
         // Sombra jugador
         g2.setColor(new Color(80, 80, 80, 60));
@@ -248,6 +270,23 @@ private int contadorToxicos = 0;
             JOptionPane.showMessageDialog(this, d.getEfectoCorto() + "\n" + d.getEfectoLargo(), "Consecuencia", JOptionPane.INFORMATION_MESSAGE);
         }
     }
+
+    /**
+     * Reproduce un sonido al atrapar un objeto.
+     * El archivo debe estar en src/ecocatch/recursos/catch.wav
+     */
+    private void playCatchSound() {
+        try {
+            Clip clip = AudioSystem.getClip();
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(
+                getClass().getResource("/ecocatch/recursos/catch.wav")
+            );
+            clip.open(audioInputStream);
+            clip.start();
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException ex) {
+            ex.printStackTrace();
+        }
+    }
     
     private void detectarColisiones() {
         NodoElemento temp = elementos.getCabeza();
@@ -262,6 +301,9 @@ private int contadorToxicos = 0;
             if (fe.getBounds().intersects(jugador.getBounds())) {
                 score += fe.getPuntos();
                 historial.agregar(fe);
+
+                // Reproducir sonido al atrapar objeto
+                playCatchSound();
 
                 // Objetivos de misión y contadores para mostrar decisiones
                 switch (fe.getTipo()) {

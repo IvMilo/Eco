@@ -29,7 +29,14 @@ public class RecursosPanel extends JPanel {
     }
 
     public void actualizar() {
-        lblDinero.setText("💰: " + gestorRecursos.getCantidad(Recurso.Tipo.DINERO) + "  ");
+        ImageIcon icon = null;
+        java.net.URL iconURL = getClass().getResource("/ecocatch/recursos/dinero.png");
+        if (iconURL != null) {
+            ImageIcon original = new ImageIcon(iconURL);
+            Image scaled = original.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+            icon = new ImageIcon(scaled);
+        }
+        lblDinero.setText("💰: " + gestorRecursos.getCantidad(Recurso.Tipo.DINERO));
         lblEnergia.setText("⚡: " + gestorRecursos.getCantidad(Recurso.Tipo.ENERGIA) + "  ");
         lblAgua.setText("💧: " + gestorRecursos.getCantidad(Recurso.Tipo.AGUA));
     }

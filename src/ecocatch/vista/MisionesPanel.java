@@ -19,33 +19,41 @@ public class MisionesPanel extends JPanel {
     private final GestorMisiones gestorMisiones;
     private final Usuario usuario;
     private final JButton btnJugar;
+    private final JButton btnTutorial;
     private final JList<String> listaMisiones;
     private final JLabel lblObjetivo, lblEstado, lblTitulo;
     private List<Mision> misiones;
 
-    public MisionesPanel(GestorMisiones gestorMisiones, Usuario usuario, Runnable onSeleccionarMision) {
+    public MisionesPanel(GestorMisiones gestorMisiones, Usuario usuario, Runnable onSeleccionarMision, Runnable onTutorial) {
         this.gestorMisiones = gestorMisiones;
         this.usuario = usuario;
         setLayout(new BorderLayout());
         setBackground(new Color(223, 245, 223));
 
         // Título con icono ecológico
-        lblTitulo = new JLabel("🌱 Seleccionar Misión", SwingConstants.CENTER);
+        ImageIcon icon = null;
+        java.net.URL iconURL = getClass().getResource("/ecocatch/recursos/seed.png");
+        if (iconURL != null) {
+            ImageIcon original = new ImageIcon(iconURL);
+            Image scaled = original.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+            icon = new ImageIcon(scaled);
+        }
+        lblTitulo = new JLabel("Seleccionar Misión", icon, SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
         lblTitulo.setForeground(new Color(34, 80, 34));
         lblTitulo.setBorder(new EmptyBorder(30, 10, 20, 10));
         add(lblTitulo, BorderLayout.NORTH);
 
         // Misiones
-        misiones = gestorMisiones.getMisiones().stream().sorted((a,b) -> a.getId()-b.getId()).collect(Collectors.toList());
+        misiones = gestorMisiones.getMisiones().stream().sorted((a, b) -> a.getId() - b.getId()).collect(Collectors.toList());
         DefaultListModel<String> modelo = new DefaultListModel<>();
         for (Mision m : misiones) {
             modelo.addElement(
                 "<html><b>[" + m.getId() + "] " + m.getNombre() + "</b> " +
-                (usuario.getMisionesCompletadas().contains(m.getId()) 
-                    ? "<span style='color:#388e3c'>(✔ Completada)</span>"
-                    : "<span style='color:#0288d1'>(Pendiente)</span>") +
-                "</html>"
+                    (usuario.getMisionesCompletadas().contains(m.getId())
+                        ? "<span style='color:#388e3c'>(✔ Completada)</span>"
+                        : "<span style='color:#0288d1'>(Pendiente)</span>") +
+                    "</html>"
             );
         }
         listaMisiones = new JList<>(modelo);
@@ -62,7 +70,7 @@ public class MisionesPanel extends JPanel {
         scroll.setBorder(new EmptyBorder(10, 25, 10, 25));
         add(scroll, BorderLayout.CENTER);
 
-        // Panel inferior con detalles y botón
+        // Panel inferior con detalles y botones
         JPanel pnlInferior = new JPanel(new GridLayout(3, 1, 0, 6));
         pnlInferior.setOpaque(false);
         pnlInferior.setBorder(new EmptyBorder(20, 25, 25, 25));
@@ -71,16 +79,39 @@ public class MisionesPanel extends JPanel {
         lblObjetivo.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         lblEstado = new JLabel(" ", SwingConstants.CENTER);
         lblEstado.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        btnJugar = new JButton("🌍 Jugar misión");
+
+        // Panel de botones en horizontal
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 0));
+        panelBotones.setOpaque(false);
+
+        btnJugar = new JButton("Jugar misión");
         btnJugar.setFont(new Font("Segoe UI", Font.BOLD, 18));
         btnJugar.setBackground(new Color(56, 142, 60));
         btnJugar.setForeground(Color.white);
         btnJugar.setFocusPainted(false);
         btnJugar.setBorder(new LineBorder(new Color(34, 80, 34), 2, true));
+        btnJugar.addActionListener(e -> {
+            if (!listaMisiones.isSelectionEmpty()) {
+                onSeleccionarMision.run();
+            }
+        });
+
+        btnTutorial = new JButton("Tutorial");
+        btnTutorial.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btnTutorial.setBackground(new Color(30, 136, 229));
+        btnTutorial.setForeground(Color.white);
+        btnTutorial.setFocusPainted(false);
+        btnTutorial.setBorder(new LineBorder(new Color(30, 136, 229), 2, true));
+        btnTutorial.addActionListener(e -> {
+            onTutorial.run();
+        });
+
+        panelBotones.add(btnJugar);
+        panelBotones.add(btnTutorial);
 
         pnlInferior.add(lblObjetivo);
         pnlInferior.add(lblEstado);
-        pnlInferior.add(btnJugar);
+        pnlInferior.add(panelBotones);
         add(pnlInferior, BorderLayout.SOUTH);
 
         // Lógica de selección
@@ -97,27 +128,21 @@ public class MisionesPanel extends JPanel {
                 lblEstado.setText(" ");
             }
         });
-
-        btnJugar.addActionListener(e -> {
-            if (!listaMisiones.isSelectionEmpty()) {
-                onSeleccionarMision.run();
-            }
-        });
     }
 
     /**
      * Refresca el listado de misiones mostrado en la lista.
      */
     public void actualizarMisiones() {
-        misiones = gestorMisiones.getMisiones().stream().sorted((a,b) -> a.getId()-b.getId()).collect(Collectors.toList());
+        misiones = gestorMisiones.getMisiones().stream().sorted((a, b) -> a.getId() - b.getId()).collect(Collectors.toList());
         DefaultListModel<String> modelo = new DefaultListModel<>();
         for (Mision m : misiones) {
             modelo.addElement(
                 "<html><b>[" + m.getId() + "] " + m.getNombre() + "</b> " +
-                (usuario.getMisionesCompletadas().contains(m.getId()) 
-                    ? "<span style='color:#388e3c'>(✔ Completada)</span>"
-                    : "<span style='color:#0288d1'>(Pendiente)</span>")
-                + "</html>"
+                    (usuario.getMisionesCompletadas().contains(m.getId())
+                        ? "<span style='color:#388e3c'>(✔ Completada)</span>"
+                        : "<span style='color:#0288d1'>(Pendiente)</span>")
+                    + "</html>"
             );
         }
         listaMisiones.setModel(modelo);

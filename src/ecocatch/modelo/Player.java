@@ -17,8 +17,8 @@ import java.io.IOException;
 public class Player {
     private int x, y;
     private int limiteDerecho; // Límite derecho del panel (para no salirse)
-    private final int ancho = 60;
-    private final int alto = 40;
+    private final int ancho = 100;
+    private final int alto = 120;
 
     private static BufferedImage playerImg;
 

@@ -12,6 +12,7 @@ import java.awt.*;
  * GameFrame principal con integración completa de usuarios, misiones, recursos, decisiones y resultados.
  * Modular, escalable y compatible con la jugabilidad original.
  */
+
 public class GameFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
@@ -31,6 +32,7 @@ public class GameFrame extends JFrame {
     private DecisionesPanel decisionesPanel;
     private GamePanel gamePanel;
     private ResultadoPanel resultadoPanel;
+    private TutorialPanel tutorialPanel;
 
     public GameFrame() {
         setTitle("EcoCatch - Simulación Cambio Climático");
@@ -70,7 +72,12 @@ public class GameFrame extends JFrame {
 
     public void mostrarMisiones() {
         usuarioActual = gestorUsuarios.getUsuarioActual();
-        misionesPanel = new MisionesPanel(gestorMisiones, usuarioActual, this::iniciarMision);
+        misionesPanel = new MisionesPanel(
+            gestorMisiones,
+            usuarioActual,
+            this::iniciarMision,   // Para "Jugar misión"
+            this::mostrarTutorial  // Para "Tutorial"
+        );
         mainPanel.add(misionesPanel, "misiones");
         cardLayout.show(mainPanel, "misiones");
     }
@@ -89,7 +96,7 @@ public class GameFrame extends JFrame {
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(recursosPanel, BorderLayout.NORTH);
         wrapper.add(gamePanel, BorderLayout.CENTER);
-        wrapper.add(decisionesPanel, BorderLayout.SOUTH);
+//        wrapper.add(decisionesPanel, BorderLayout.SOUTH);
 
         mainPanel.add(wrapper, "juego");
         cardLayout.show(mainPanel, "juego");
@@ -100,6 +107,11 @@ public class GameFrame extends JFrame {
      */
     public void mostrarResultados(int score, Mision mision, boolean exitoMision,
                                   GestorRecursos gestorRecursos, PilaDecisiones pilaDecisiones, Usuario usuario) {
+        // Guarda el progreso solo si la misión fue completada con éxito
+        if (exitoMision) {
+            usuario.completarMision(mision.getId());
+            gestorUsuarios.guardarUsuarios();
+        }
         resultadoPanel = new ResultadoPanel(
             score, mision, exitoMision, gestorRecursos, pilaDecisiones, usuario,
             this::mostrarMisiones, // acción "volver"
@@ -113,18 +125,28 @@ public class GameFrame extends JFrame {
      * Permite reintentar una misión directamente desde el panel de resultados.
      */
     private void iniciarMisionDesdeResultado(int idMision) {
-        // Puedes resetear recursos/decisiones si así lo requiere el diseño
+        // Crear nuevas instancias para reiniciar el estado de la misión
+        gestorRecursos = new GestorRecursos();
+        pilaDecisiones = new PilaDecisiones();
         recursosPanel = new RecursosPanel(gestorRecursos);
-        decisionesPanel = new DecisionesPanel(pilaDecisiones, recursosPanel::actualizar);
         gamePanel = new GamePanel(this, gestorMisiones.getMision(idMision), gestorRecursos, pilaDecisiones, usuarioActual);
 
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(recursosPanel, BorderLayout.NORTH);
         wrapper.add(gamePanel, BorderLayout.CENTER);
-        wrapper.add(decisionesPanel, BorderLayout.SOUTH);
-
         mainPanel.add(wrapper, "juego");
         cardLayout.show(mainPanel, "juego");
     }
-}
 
+    // ---- Tutorial interactivo ----
+    public void mostrarTutorial() {
+        // Siempre crea uno nuevo para que empiece en el paso 0
+        tutorialPanel = new TutorialPanel(this::volverDeTutorialAMisiones);
+        mainPanel.add(tutorialPanel, "tutorial");
+        cardLayout.show(mainPanel, "tutorial");
+    }
+
+    public void volverDeTutorialAMisiones() {
+        cardLayout.show(mainPanel, "misiones");
+    }
+}
